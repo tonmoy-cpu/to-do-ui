@@ -3,8 +3,8 @@ import React from "react";
 import "@/app/globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Provider } from "react-redux";
-import store from "@/redux/store";
-import AuthWrapper from "@/components/AuthWrapper"; // New component to handle auth logic
+import store from "@/redux/store"; // Correct import
+import AuthWrapper from "@/components/AuthWrapper";
 
 export default function RootLayout({
   children,

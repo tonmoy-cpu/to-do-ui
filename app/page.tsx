@@ -1,8 +1,9 @@
-"use client"
+// app/page.tsx
+"use client"; // Ensure this is a client component
 
-import { useState } from "react"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Button } from "@/components/ui/button"
+import { useState, useEffect } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
 import {
   CheckCircle2,
   Clock,
@@ -15,18 +16,28 @@ import {
   Settings,
   Star,
   User,
-} from "lucide-react"
-import { cn } from "@/lib/utils"
-import { useTheme } from "next-themes"
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { useTheme } from "next-themes";
+import TaskInput from "@/components/TaskInput";
+import TaskList from "@/components/TaskList";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchWeather } from "@/redux/actions";
 
 export default function TaskManager() {
-  const [sidebarOpen, setSidebarOpen] = useState(true)
-  const [activeTab, setActiveTab] = useState("inbox")
-  const { theme, setTheme } = useTheme()
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [activeTab, setActiveTab] = useState("inbox");
+  const { theme, setTheme } = useTheme();
+  const dispatch = useDispatch();
+  const weather = useSelector((state) => state.weather);
 
   const toggleTheme = () => {
-    setTheme(theme === "dark" ? "light" : "dark")
-  }
+    setTheme(theme === "dark" ? "light" : "dark");
+  };
+
+  useEffect(() => {
+    dispatch(fetchWeather());
+  }, [dispatch]);
 
   return (
     <div className="flex h-screen bg-[#fbfdfc] dark:bg-[#1e1e1e] text-[#1b281b] dark:text-white">
@@ -34,7 +45,7 @@ export default function TaskManager() {
       <div
         className={cn(
           "flex flex-col border-r border-[#eef6ef] dark:border-[#2c2c2c] bg-[#fbfdfc] dark:bg-[#232323] transition-all duration-300",
-          sidebarOpen ? "w-64" : "w-0 md:w-20",
+          sidebarOpen ? "w-64" : "w-0 md:w-20"
         )}
       >
         {/* User profile */}
@@ -42,7 +53,7 @@ export default function TaskManager() {
           {sidebarOpen ? (
             <>
               <Avatar className="h-10 w-10 border border-[#eef6ef] dark:border-[#2c2c2c]">
-                <AvatarImage src="/placeholder.svg?height=40&width=40" alt="User" />
+                <AvatarImage src="/placeholder.svg?height=40&width=40" alt="User  " />
                 <AvatarFallback className="bg-[#eef6ef] dark:bg-[#2c2c2c] text-[#3f9142] dark:text-[#98e19b]">
                   JD
                 </AvatarFallback>
@@ -54,7 +65,7 @@ export default function TaskManager() {
             </>
           ) : (
             <Avatar className="h-10 w-10 mx-auto border border-[#eef6ef] dark:border-[#2c2c2c]">
-              <AvatarImage src="/placeholder.svg?height=40&width=40" alt="User" />
+              <AvatarImage src="/placeholder.svg?height=40&width=40" alt="User  " />
               <AvatarFallback className="bg-[#eef6ef] dark:bg-[#2c2c2c] text-[#3f9142] dark:text-[#98e19b]">
                 JD
               </AvatarFallback>
@@ -79,7 +90,7 @@ export default function TaskManager() {
                     "flex items-center w-full px-3 py-2 rounded-md text-sm",
                     activeTab === item.id
                       ? "bg-[#eef6ef] dark:bg-[#2f3630] text-[#3f9142] dark:text-[#98e19b]"
-                      : "hover:bg-[#f6fff6] dark:hover:bg-[#2c2c2c]",
+                      : "hover:bg-[#f6fff6] dark:hover:bg-[#2c2c2c]"
                   )}
                 >
                   <span className="mr-3">{item.icon}</span>
@@ -93,31 +104,10 @@ export default function TaskManager() {
             <div
               className={cn(
                 "text-xs font-medium text-[#4f4f4f] dark:text-[#bdbdbd] mb-2",
-                !sidebarOpen && "text-center",
+                !sidebarOpen && "text-center"
               )}
             >
               {sidebarOpen ? "YOUR TASKS" : "TASKS"}
-            </div>
-            <div className="mt-4">
-              <DonutChart value={65} size={sidebarOpen ? 120 : 80} />
-            </div>
-            <div className="mt-4 space-y-1">
-              {[
-                { id: "completed", color: "#3f9142", label: "Completed", value: 12 },
-                { id: "in-progress", color: "#a0eda4", label: "In Progress", value: 8 },
-                { id: "pending", color: "#bdbdbd", label: "Pending", value: 5 },
-                { id: "cancelled", color: "#4f4f4f", label: "Cancelled", value: 2 },
-              ].map((item) => (
-                <div key={item.id} className={cn("flex items-center text-xs", !sidebarOpen && "justify-center")}>
-                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }}></div>
-                  {sidebarOpen && (
-                    <>
-                      <span className="ml-2 text-[#4f4f4f] dark:text-[#bdbdbd]">{item.label}</span>
-                      <span className="ml-auto">{item.value}</span>
-                    </>
-                  )}
-                </div>
-              ))}
             </div>
           </div>
         </nav>
@@ -127,7 +117,7 @@ export default function TaskManager() {
           <button
             className={cn(
               "flex items-center text-sm text-[#4f4f4f] dark:text-[#bdbdbd] hover:text-[#1b281b] dark:hover:text-white",
-              !sidebarOpen && "justify-center",
+              !sidebarOpen && "justify-center"
             )}
           >
             <Settings size={18} />
@@ -168,7 +158,7 @@ export default function TaskManager() {
               {theme === "dark" ? "☀️" : "🌙"}
             </button>
             <button className="p-2 rounded-md text-[#4f4f4f] dark:text-[#bdbdbd] hover:bg-[#eef6ef] dark:hover:bg-[#2c2c2c]">
-              <User size={20} />
+              <User  size={20} />
             </button>
           </div>
         </header>
@@ -182,90 +172,29 @@ export default function TaskManager() {
             </Button>
           </div>
 
-          {/* Tasks */}
-          <div className="space-y-4">
-            {[
-              { id: 1, title: "Design meeting", completed: true, important: true },
-              { id: 2, title: "Code review", completed: false, important: true },
-              { id: 3, title: "Research new tools", completed: false, important: false },
-              { id: 4, title: "Update documentation", completed: false, important: false },
-              { id: 5, title: "Create wireframes", completed: false, important: true },
-            ].map((task) => (
-              <TaskItem key={task.id} task={task} />
-            ))}
-          </div>
-
-          <div className="mt-8">
-            <h2 className="text-lg font-medium mb-4">Upcoming Tasks</h2>
-            <div className="space-y-4">
-              {[
-                { id: 6, title: "Team standup meeting", completed: false, important: true },
-                { id: 7, title: "Prepare presentation", completed: false, important: true },
-                { id: 8, title: "Client feedback review", completed: false, important: false },
-              ].map((task) => (
-                <TaskItem key={task.id} task={task} />
-              ))}
+          {/* Weather Display */}
+          {weather && (
+            <div className="mb-4 p-4 bg-white dark:bg-[#242424] rounded-lg shadow">
+              <h3 className="text-lg font-medium">Current Weather</h3>
+              <p>{weather.name}: {weather.main.temp}°C</p>
+              <p>{weather.weather[0].description}</p>
             </div>
-          </div>
+          )}
+
+          {/* Task Input and List */}
+          <TaskInput />
+          <TaskList />
         </main>
       </div>
     </div>
-  )
-}
-
-function TaskItem({ task }) {
-  const [isCompleted, setIsCompleted] = useState(task.completed)
-
-  return (
-    <div
-      className={cn(
-        "flex items-center p-4 rounded-lg border",
-        isCompleted
-          ? "border-[#eef6ef] dark:border-[#2c2c2c] bg-[#f6fff6] dark:bg-[#2f3630]/50"
-          : "border-[#eef6ef] dark:border-[#2c2c2c] bg-white dark:bg-[#242424]",
-      )}
-    >
-      <button
-        onClick={() => setIsCompleted(!isCompleted)}
-        className={cn(
-          "flex-shrink-0 w-5 h-5 rounded-full border-2",
-          isCompleted
-            ? "border-[#3f9142] dark:border-[#98e19b] bg-[#3f9142] dark:bg-[#98e19b]"
-            : "border-[#bdbdbd] dark:border-[#4f4f4f]",
-        )}
-      >
-        {isCompleted && (
-          <svg viewBox="0 0 24 24" fill="none" className="w-full h-full text-white">
-            <path
-              d="M5 13l4 4L19 7"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        )}
-      </button>
-      <div className="ml-4 flex-1">
-        <p className={cn("text-sm", isCompleted && "line-through text-[#4f4f4f] dark:text-[#bdbdbd]")}>{task.title}</p>
-      </div>
-      <div className="flex items-center space-x-2">
-        {task.important && (
-          <Star size={16} className="text-[#3f9142] dark:text-[#98e19b] fill-[#3f9142] dark:fill-[#98e19b]" />
-        )}
-        <button className="p-1 text-[#4f4f4f] dark:text-[#bdbdbd] hover:text-[#1b281b] dark:hover:text-white">
-          <MoreHorizontal size={16} />
-        </button>
-      </div>
-    </div>
-  )
+  );
 }
 
 function DonutChart({ value, size = 120 }) {
-  const strokeWidth = size * 0.1
-  const radius = (size - strokeWidth) / 2
-  const circumference = 2 * Math.PI * radius
-  const strokeDashoffset = circumference - (value / 100) * circumference
+  const strokeWidth = size * 0.1;
+  const radius = (size - strokeWidth) / 2;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (value / 100) * circumference;
 
   return (
     <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
@@ -296,6 +225,5 @@ function DonutChart({ value, size = 120 }) {
         <span className="text-lg font-medium">{value}%</span>
       </div>
     </div>
-  )
+  );
 }
-

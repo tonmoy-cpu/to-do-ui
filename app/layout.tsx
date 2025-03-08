@@ -1,9 +1,10 @@
-"use client"; // Ensure this is a client component
+"use client";
 import React from "react";
 import "@/app/globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Provider } from "react-redux";
 import store from "@/redux/store";
+import AuthWrapper from "@/components/AuthWrapper"; // New component to handle auth logic
 
 export default function RootLayout({
   children,
@@ -13,9 +14,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body>
-        <Provider store={store}> {/* Move Provider inside body */}
+        <Provider store={store}>
           <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
-            {children}
+            <AuthWrapper>{children}</AuthWrapper>
           </ThemeProvider>
         </Provider>
       </body>

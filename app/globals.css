@@ -99,3 +99,8 @@ body {
   color: white;
 }
 
+/* Add to existing globals.css */
+.task-high { background-color: hsl(0 84.2% 60.2%); color: white; }
+.task-medium { background-color: hsl(43 74% 66%); color: black; }
+.task-low { background-color: hsl(0 0% 96.1%); color: black; }
+.task-options { @apply absolute bg-white dark:bg-[#242424] shadow-lg rounded-md p-2; }

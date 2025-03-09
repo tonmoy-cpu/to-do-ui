@@ -1,84 +1,95 @@
 "use client";
 import React, { useState } from "react";
-import { useDispatch } from "react-redux";
-import { addTask, fetchWeather } from "@/redux/actions";
-import { AppDispatch } from "@/redux/store";
 import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
+import { useDispatch } from "react-redux";
+import { addTask } from "@/redux/actions";
+import { AppDispatch } from "@/redux/store";
 import { Task } from "@/types/task";
-import { v4 as uuidv4 } from "uuid";
 
-const TaskInput = ({ onClose }: { onClose: () => void }) => {
-  const [task, setTask] = useState("");
-  const [category, setCategory] = useState<"indoor" | "outdoor">("indoor");
-  const [location, setLocation] = useState("London");
-  const [priority, setPriority] = useState<"low" | "medium" | "high">("low");
+const TaskInput: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+  const [title, setTitle] = useState("");
   const [reminder, setReminder] = useState("");
+  const [category, setCategory] = useState("indoor");
+  const [priority, setPriority] = useState("low");
+  const [location, setLocation] = useState("");
   const dispatch = useDispatch<AppDispatch>();
 
-  const handleAddTask = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (task) {
+    if (title.trim()) {
       const newTask: Task = {
-        id: uuidv4(),
-        title: task,
-        category,
-        location,
-        priority,
-        reminder: reminder ? new Date(reminder).toISOString() : null,
-        completed: false,
+        id: Date.now().toString(), // Unique ID based on timestamp
+        title: title.trim(),
+        reminder: reminder || null,
+        completed: false, // Explicitly set to false
+        category: category as "indoor" | "outdoor",
+        priority: priority as "low" | "medium" | "high",
+        location: category === "outdoor" ? location : "",
       };
-      console.log("Generated ID:", newTask.id);
+      console.log("Adding new task:", newTask); // Debug log
       dispatch(addTask(newTask));
-      if (category === "outdoor") {
-        dispatch(fetchWeather(location));
-      }
-      setTask("");
+      setTitle("");
+      setReminder("");
+      setCategory("indoor");
+      setPriority("low");
+      setLocation("");
       onClose();
     }
   };
 
   return (
-    <form onSubmit={handleAddTask} className="flex flex-col space-y-2 mb-4 p-4 bg-white dark:bg-[#242424] rounded-lg shadow">
-      <input
-        type="text"
-        value={task}
-        onChange={(e) => setTask(e.target.value)}
-        placeholder="Add a new task"
-        className="border p-2"
-      />
-      <select value={category} onChange={(e) => setCategory(e.target.value as "indoor" | "outdoor")} className="border p-2">
-        <option value="indoor">Indoor</option>
-        <option value="outdoor">Outdoor</option>
-      </select>
-      {category === "outdoor" && (
+    <div className="mb-6 bg-white dark:bg-[#242424] p-4 rounded-lg shadow-lg">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <input
           type="text"
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
-          placeholder="Location"
-          className="border p-2"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Enter task title"
+          className="w-full p-2 border rounded text-[#1b281b] dark:text-white bg-transparent"
         />
-      )}
-      <select value={priority} onChange={(e) => setPriority(e.target.value as "low" | "medium" | "high")} className="border p-2">
-        <option value="low">Low</option>
-        <option value="medium">Medium</option>
-        <option value="high">High</option>
-      </select>
-      <input
-        type="datetime-local"
-        value={reminder}
-        onChange={(e) => setReminder(e.target.value)}
-        className="border p-2"
-      />
-      <div className="flex space-x-2">
-        <Button type="submit" className="bg-[#3f9142] hover:bg-[#357937] text-white">
-          Add Task
-        </Button>
-        <Button type="button" onClick={onClose} className="bg-gray-500 hover:bg-gray-600 text-white">
-          Cancel
-        </Button>
-      </div>
-    </form>
+        <input
+          type="datetime-local"
+          value={reminder}
+          onChange={(e) => setReminder(e.target.value)}
+          className="w-full p-2 border rounded text-[#1b281b] dark:text-white bg-transparent"
+        />
+        <select
+          value={category}
+          onChange={(e) => setCategory(e.target.value)}
+          className="w-full p-2 border rounded text-[#1b281b] dark:text-white bg-transparent"
+        >
+          <option value="indoor">Indoor</option>
+          <option value="outdoor">Outdoor</option>
+        </select>
+        {category === "outdoor" && (
+          <input
+            type="text"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            placeholder="Location"
+            className="w-full p-2 border rounded text-[#1b281b] dark:text-white bg-transparent"
+          />
+        )}
+        <select
+          value={priority}
+          onChange={(e) => setPriority(e.target.value)}
+          className="w-full p-2 border rounded text-[#1b281b] dark:text-white bg-transparent"
+        >
+          <option value="low">Low</option>
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
+        </select>
+        <div className="flex justify-end space-x-2">
+          <Button type="button" variant="outline" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button type="submit" className="bg-[#3f9142] hover:bg-[#357937] text-white">
+            <Plus size={16} className="mr-2" /> Add Task
+          </Button>
+        </div>
+      </form>
+    </div>
   );
 };
 

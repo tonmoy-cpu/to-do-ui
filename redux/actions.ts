@@ -1,20 +1,64 @@
-import { createAction } from "@reduxjs/toolkit";
-import weatherService from "@/services/weatherService";
 import { Task } from "@/types/task";
+import { Weather } from "@/types/weather";
 
-export const addTask = createAction<Task>("ADD_TASK");
-export const deleteTask = createAction<string>("DELETE_TASK");
-export const editTask = createAction<Task>("EDIT_TASK");
-export const login = createAction("LOGIN");
-export const logout = createAction("LOGOUT");
-export const toggleTaskCompletion = createAction<string>("TOGGLE_TASK_COMPLETION"); // New action
+// Action Types
+export const ADD_TASK = "ADD_TASK";
+export const DELETE_TASK = "DELETE_TASK";
+export const TOGGLE_TASK_COMPLETION = "TOGGLE_TASK_COMPLETION";
+export const FETCH_WEATHER_SUCCESS = "FETCH_WEATHER_SUCCESS";
+export const FETCH_WEATHER_FAILURE = "FETCH_WEATHER_FAILURE";
+export const UPDATE_TASK = "UPDATE_TASK"; // Use UPDATE_TASK instead of EDIT_TASK
+export const LOGIN = "LOGIN"; // New action type
 
-export const fetchWeather = (location = "London") => async (dispatch: any) => {
+// Action Creators
+export const addTask = (task: Task) => ({
+  type: ADD_TASK,
+  payload: task,
+});
+
+export const deleteTask = (taskId: string) => ({
+  type: DELETE_TASK,
+  payload: taskId,
+});
+
+export const toggleTaskCompletion = (taskId: string) => ({
+  type: TOGGLE_TASK_COMPLETION,
+  payload: taskId,
+});
+
+export const fetchWeatherSuccess = (location: string, weather: Weather) => ({
+  type: FETCH_WEATHER_SUCCESS,
+  payload: { location, weather },
+});
+
+export const fetchWeatherFailure = (location: string, error: string) => ({
+  type: FETCH_WEATHER_FAILURE,
+  payload: { location, error },
+});
+
+export const updateTask = (taskId: string, updatedFields: Partial<Task>) => ({
+  type: UPDATE_TASK,
+  payload: { taskId, updatedFields },
+});
+
+export const login = (username: string | null) => ({
+  type: LOGIN,
+  payload: username,
+});
+
+// Thunk for fetching weather
+export const fetchWeather = (location: string) => async (dispatch: any) => {
   try {
-    const weather = await weatherService.getWeather(location);
-    dispatch({ type: "SET_WEATHER", payload: weather });
+    const apiKey = process.env.NEXT_PUBLIC_OPENWEATHER_API_KEY;
+    const response = await fetch(
+      `https://api.openweathermap.org/data/2.5/weather?q=${location}&appid=${apiKey}&units=metric`
+    );
+    if (!response.ok) {
+      throw new Error("Failed to fetch weather data");
+    }
+    const weatherData: Weather = await response.json();
+    dispatch(fetchWeatherSuccess(location, weatherData));
   } catch (error) {
-    console.error(`Failed to fetch weather for ${location}:`, error);
-    dispatch({ type: "SET_WEATHER", payload: { name: location, error: true } });
+    dispatch(fetchWeatherFailure(location, error.message));
   }
 };

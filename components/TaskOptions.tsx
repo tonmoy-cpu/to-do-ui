@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { MoreHorizontal } from "lucide-react";
 import { useDispatch } from "react-redux";
-import { editTask } from "@/redux/actions";
+import { updateTask } from "@/redux/actions"; // Updated import
 import { AppDispatch } from "@/redux/store";
 import { Task } from "@/types/task";
 import calendarService from "@/services/calendarService";
@@ -13,8 +13,11 @@ const TaskOptions = ({ task }: { task: Task }) => {
   const dispatch = useDispatch<AppDispatch>();
 
   const handleEdit = (field: keyof Task, value: string | null) => {
-    const updatedTask: Task = { ...task, [field]: value };
-    dispatch(editTask(updatedTask));
+    // Dispatch updateTask with taskId and the updated field
+    if (value !== null) {
+      const updatedFields: Partial<Task> = { [field]: value };
+      dispatch(updateTask(task.id, updatedFields));
+    }
     setIsOpen(false);
   };
 
@@ -65,7 +68,12 @@ const TaskOptions = ({ task }: { task: Task }) => {
             Due Date
           </button>
           <button
-            onClick={() => handleEdit("priority", prompt("Set priority (high, medium, low)", task.priority) as "low" | "medium" | "high")}
+            onClick={() =>
+              handleEdit(
+                "priority",
+                prompt("Set priority (high, medium, low)", task.priority) as "low" | "medium" | "high" | null
+              )
+            }
             className="block w-full text-left px-4 py-2 hover:bg-gray-100 dark:hover:bg-[#2c2c2c] text-[#1b281b] dark:text-white"
           >
             Set Priority

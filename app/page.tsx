@@ -9,33 +9,45 @@ import TaskInput from "@/components/TaskInput";
 import TaskList from "@/components/TaskList";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
-import { ThemeProvider } from "@/components/theme-provider";
 
 export default function TaskManager() {
+  const tasks = useSelector((state: RootState) => state.tasks);
+
+  const [pendingReminders, setPendingReminders] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    const newReminders: string[] = [];
+    tasks.forEach((task) => {
+      if (
+        task.reminder &&
+        new Date(task.reminder) <= new Date() &&
+        !task.completed &&
+        !pendingReminders.has(task.id)
+      ) {
+        console.log(`Reminder triggered for: ${task.title} with ID: ${task.id}`);
+        newReminders.push(task.id);
+      }
+    });
+    if (newReminders.length > 0) {
+      setPendingReminders((prev) => {
+        const updatedSet = new Set(prev);
+        newReminders.forEach((id) => updatedSet.add(id));
+        return updatedSet;
+      });
+    }
+  }, [tasks, pendingReminders]);
+
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState("inbox");
   const [showTaskInput, setShowTaskInput] = useState(false);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
-  const tasks = useSelector((state: RootState) => state.tasks);
-
-  // Fallback to detect theme directly from <html> class
-  const [effectiveTheme, setEffectiveTheme] = useState(theme);
 
   useEffect(() => {
     console.log("Theme changed to:", theme);
-    setEffectiveTheme(theme); // Update effective theme when useTheme updates
   }, [theme]);
 
-  // Observe <html> class changes as a fallback
   useEffect(() => {
-    const html = document.documentElement;
-    const observer = new MutationObserver(() => {
-      setEffectiveTheme(html.classList.contains("dark") ? "dark" : "light");
-    });
-    observer.observe(html, { attributes: true, attributeFilter: ["class"] });
     setMounted(true);
-    return () => observer.disconnect();
   }, []);
 
   if (!mounted) return null;
@@ -52,134 +64,139 @@ export default function TaskManager() {
   const remainingTasks = totalTasks - completedTasks;
   const progress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
-  // Use effectiveTheme for color computation
-  const textColor = effectiveTheme === "dark" ? "#bdbdbd" : "#1b281b";
+  const textColor = theme === "dark" ? "#bdbdbd" : "#1b281b";
+
+  // Debug theme value right before rendering the SVG
+  console.log("Rendering progress bar with theme:", theme);
 
   return (
-    <ThemeProvider>
-      <div className="flex h-screen bg-[#fbfdfc] dark:bg-[#1e1e1e] text-[#1b281b] dark:text-white">
-        <div className={cn("flex flex-col border-r border-[#eef6ef] dark:border-[#2c2c2c] bg-[#fbfdfc] dark:bg-[#232323] transition-all duration-300", sidebarOpen ? "w-64" : "w-0 md:w-20")}>
-          <div className="flex items-center p-4 border-b border-[#eef6ef] dark:border-[#2c2c2c]">
-            {sidebarOpen ? (
-              <>
-                <Avatar className="h-10 w-10 border border-[#eef6ef] dark:border-[#2c2c2c]">
-                  <AvatarImage src="/placeholder.svg?height=40&width=40" alt="User" />
-                  <AvatarFallback className="bg-[#eef6ef] dark:bg-[#2c2c2c] text-[#3f9142] dark:text-[#98e19b]">JD</AvatarFallback>
-                </Avatar>
-                <div className="ml-3">
-                  <p className="text-sm font-medium">Hey, ABCD</p>
-                  <p className="text-xs text-[#4f4f4f] dark:text-[#bdbdbd]">Front End Developer</p>
-                </div>
-              </>
-            ) : (
-              <Avatar className="h-10 w-10 mx-auto border border-[#eef6ef] dark:border-[#2c2c2c]">
+    <div className="flex h-screen bg-[#fbfdfc] dark:bg-[#1e1e1e] text-[#1b281b] dark:text-white">
+      {/* Left Sidebar */}
+      <div className={cn("flex flex-col border-r border-[#eef6ef] dark:border-[#2c2c2c] bg-[#fbfdfc] dark:bg-[#232323] transition-all duration-300", sidebarOpen ? "w-64" : "w-0 md:w-20")}>
+        <div className="flex items-center p-4 border-b border-[#eef6ef] dark:border-[#2c2c2c]">
+          {sidebarOpen ? (
+            <>
+              <Avatar className="h-10 w-10 border border-[#eef6ef] dark:border-[#2c2c2c]">
                 <AvatarImage src="/placeholder.svg?height=40&width=40" alt="User" />
                 <AvatarFallback className="bg-[#eef6ef] dark:bg-[#2c2c2c] text-[#3f9142] dark:text-[#98e19b]">JD</AvatarFallback>
               </Avatar>
-            )}
-          </div>
-
-          <nav className="flex-1 overflow-y-auto py-4">
-            <ul className="space-y-1 px-2">
-              {[
-                { id: "home", icon: <Home size={18} />, label: "All Tasks" },
-                { id: "inbox", icon: <Inbox size={18} />, label: "Today" },
-                { id: "today", icon: <CheckCircle2 size={18} />, label: "Important" },
-                { id: "upcoming", icon: <Clock size={18} />, label: "Planned" },
-                { id: "important", icon: <Star size={18} />, label: "Assigned to me" },
-              ].map((item) => (
-                <li key={item.id}>
-                  <button
-                    onClick={() => handleTabChange(item.id)}
-                    className={cn(
-                      "flex items-center w-full px-3 py-2 rounded-md text-sm",
-                      activeTab === item.id ? "bg-[#eef6ef] dark:bg-[#2f3630] text-[#3f9142] dark:text-[#98e19b]" : "hover:bg-[#f6fff6] dark:hover:bg-[#2c2c2c]"
-                    )}
-                  >
-                    <span className="mr-3">{item.icon}</span>
-                    {sidebarOpen && <span>{item.label}</span>}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </nav>
-
-          {sidebarOpen && (
-            <div className="p-4 border-t border-[#eef6ef] dark:border-[#2c2c2c]">
-              <div className="w-24 h-24 mx-auto mb-2 relative">
-                <svg key={theme} className="w-full h-full transform -rotate-90">
-                  <circle
-                    cx="50%"
-                    cy="50%"
-                    r="40"
-                    fill="none"
-                    stroke="#e0e0e0"
-                    strokeWidth="8"
-                  />
-                  <circle
-                    cx="50%"
-                    cy="50%"
-                    r="40"
-                    fill="none"
-                    stroke="#4caf50"
-                    strokeWidth="8"
-                    strokeDasharray={`${2 * Math.PI * 40}`}
-                    strokeDashoffset={2 * Math.PI * 40 * (1 - progress / 100)}
-                  />
-                  <text
-                    x="50%"
-                    y="50%"
-                    textAnchor="middle"
-                    dy=".3em"
-                    fill={textColor} // Use fill instead of color for SVG text
-                    className={cn("font-bold", effectiveTheme === "dark" ? "text-[#bdbdbd]" : "text-[#1b281b]")} // Tailwind fallback
-                    style={{ fontWeight: "bold" }}
-                  >
-                    {`${Math.round(progress)}%`}
-                  </text>
-                </svg>
+              <div className="ml-3">
+                <p className="text-sm font-medium">Hey, ABCD</p>
+                <p className="text-xs text-[#4f4f4f] dark:text-[#bdbdbd]">Front End Developer</p>
               </div>
-              <div className="text-center text-sm text-[#4f4f4f] dark:text-[#bdbdbd]">
-                <p>Remaining: {remainingTasks}</p>
-                <p>Completed: {completedTasks}</p>
-              </div>
-              <button
-                onClick={() => handleTabChange("settings")}
-                className={cn("flex items-center text-sm text-[#4f4f4f] dark:text-[#bdbdbd] hover:text-[#1b281b] dark:hover:text-white mt-4", !sidebarOpen && "justify-center")}
-              >
-                <Settings size={18} />
-                {sidebarOpen && <span className="ml-3">Settings</span>}
-              </button>
-            </div>
+            </>
+          ) : (
+            <Avatar className="h-10 w-10 mx-auto border border-[#eef6ef] dark:border-[#2c2c2c]">
+              <AvatarImage src="/placeholder.svg?height=40&width=40" alt="User" />
+              <AvatarFallback className="bg-[#eef6ef] dark:bg-[#2c2c2c] text-[#3f9142] dark:text-[#98e19b]">JD</AvatarFallback>
+            </Avatar>
           )}
         </div>
 
-        <div className="flex-1 flex flex-col overflow-hidden">
-          <header className="flex items-center justify-between h-16 px-4 border-b border-[#eef6ef] dark:border-[#2c2c2c] bg-[#3f9142] text-white">
-            <div className="flex items-center">
-              <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 rounded-md text-white hover:bg-[#357937]">
-                <Menu size={20} />
-              </button>
-              <h1 className="ml-4 text-xl font-medium">{activeTab === "inbox" ? "Inbox Tasks" : activeTab.charAt(0).toUpperCase() + activeTab.slice(1) + " Tasks"}</h1>
-            </div>
-            <div className="flex items-center space-x-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white" size={16} />
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  className="pl-10 pr-4 py-2 rounded-md bg-white text-black focus:outline-none focus:ring-1 focus:ring-[#3f9142]"
-                />
-              </div>
-              <button onClick={toggleTheme} className="p-2 rounded-md text-white hover:bg-[#357937]">
-                {theme === "dark" ? "☀️" : "🌙"}
-              </button>
-              <button className="p-2 rounded-md text-white hover:bg-[#357937]">
-                <User size={20} />
-              </button>
-            </div>
-          </header>
+        <nav className="flex-1 overflow-y-auto py-4">
+          <ul className="space-y-1 px-2">
+            {[
+              { id: "home", icon: <Home size={18} />, label: "All Tasks" },
+              { id: "inbox", icon: <Inbox size={18} />, label: "Today" },
+              { id: "today", icon: <CheckCircle2 size={18} />, label: "Important" },
+              { id: "upcoming", icon: <Clock size={18} />, label: "Planned" },
+              { id: "important", icon: <Star size={18} />, label: "Assigned to me" },
+            ].map((item) => (
+              <li key={item.id}>
+                <button
+                  onClick={() => handleTabChange(item.id)}
+                  className={cn(
+                    "flex items-center w-full px-3 py-2 rounded-md text-sm",
+                    activeTab === item.id ? "bg-[#eef6ef] dark:bg-[#2f3630] text-[#3f9142] dark:text-[#98e19b]" : "hover:bg-[#f6fff6] dark:hover:bg-[#2c2c2c]"
+                  )}
+                >
+                  <span className="mr-3">{item.icon}</span>
+                  {sidebarOpen && <span>{item.label}</span>}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </nav>
 
+        {sidebarOpen && (
+          <div className="p-4 border-t border-[#eef6ef] dark:border-[#2c2c2c]">
+            <div className="w-24 h-24 mx-auto mb-2 relative">
+              <svg key={theme} className="w-full h-full">
+                <circle
+                  cx="50%"
+                  cy="50%"
+                  r="40"
+                  fill="none"
+                  stroke="#e0e0e0"
+                  strokeWidth="8"
+                />
+                <circle
+                  cx="50%"
+                  cy="50%"
+                  r="40"
+                  fill="none"
+                  stroke="#4caf50"
+                  strokeWidth="8"
+                  strokeDasharray={`${2 * Math.PI * 40}`}
+                  // Adjust strokeDashoffset to start at 0 degrees (12 o'clock)
+                  strokeDashoffset={2 * Math.PI * 40 - (2 * Math.PI * 40 * progress / 100)}
+                />
+                <text
+                  x="50%"
+                  y="50%"
+                  textAnchor="middle"
+                  dy=".3em"
+                  className={theme === "dark" ? "text-white" : "text-[#1b281b]"}
+                  style={{ fontWeight: "bold", fill: theme === "dark" ? "white" : "#1b281b" }}
+                >
+                  {`${Math.round(progress)}%`}
+                </text>
+              </svg>
+            </div>
+            <div className="text-center text-sm text-[#4f4f4f] dark:text-[#bdbdbd]">
+              <p>Remaining: {remainingTasks}</p>
+              <p>Completed: {completedTasks}</p>
+            </div>
+            <button
+              onClick={() => handleTabChange("settings")}
+              className={cn("flex items-center text-sm text-[#4f4f4f] dark:text-[#bdbdbd] hover:text-[#1b281b] dark:hover:text-white mt-4", !sidebarOpen && "justify-center")}
+            >
+              <Settings size={18} />
+              {sidebarOpen && <span className="ml-3">Settings</span>}
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* Main Content and Right Sidebar */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <header className="flex items-center justify-between h-16 px-4 border-b border-[#eef6ef] dark:border-[#2c2c2c] bg-[#3f9142] text-white">
+          <div className="flex items-center">
+            <button onClick={() => setSidebarOpen(!sidebarOpen)} className="p-2 rounded-md text-white hover:bg-[#357937]">
+              <Menu size={20} />
+            </button>
+            <h1 className="ml-4 text-xl font-medium">{activeTab === "inbox" ? "Inbox Tasks" : activeTab.charAt(0).toUpperCase() + activeTab.slice(1) + " Tasks"}</h1>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-white" size={16} />
+              <input
+                type="text"
+                placeholder="Search..."
+                className="pl-10 pr-4 py-2 rounded-md bg-white text-black focus:outline-none focus:ring-1 focus:ring-[#3f9142]"
+              />
+            </div>
+            <button onClick={toggleTheme} className="p-2 rounded-md text-white hover:bg-[#357937]">
+              {theme === "dark" ? "☀️" : "🌙"}
+            </button>
+            <button className="p-2 rounded-md text-white hover:bg-[#357937]">
+              <User size={20} />
+            </button>
+          </div>
+        </header>
+
+        <div className="flex-1 flex overflow-hidden">
+          {/* Main Content Area */}
           <main className="flex-1 overflow-y-auto p-6 bg-[#fbfdfc] dark:bg-[#1e1e1e]">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-lg font-medium">
@@ -191,10 +208,82 @@ export default function TaskManager() {
             </div>
 
             {showTaskInput && <TaskInput onClose={() => setShowTaskInput(false)} />}
-            <TaskList activeTab={activeTab} />
+            <TaskList
+              activeTab={activeTab}
+              pendingReminders={pendingReminders}
+              setPendingReminders={setPendingReminders}
+            />
           </main>
+
+          {/* Right Sidebar for Reminders */}
+          <div className="w-72 bg-gray-100 dark:bg-[#2c2c2c] p-4 border-l border-[#eef6ef] dark:border-[#2c2c2c] h-[calc(100vh-4rem)] overflow-y-auto">
+            <h2 className="text-lg font-semibold text-[#1b281b] dark:text-white mb-4">
+              Reminders
+            </h2>
+            {pendingReminders.size > 0 ? (
+              Array.from(pendingReminders).map((taskId) => {
+                const task = tasks.find((t) => t.id === taskId);
+                if (!task) return null;
+                return (
+                  <div
+                    key={task.id}
+                    className="bg-white dark:bg-[#242424] border border-gray-200 dark:border-[#2c2c2c] rounded-lg shadow-lg p-4 mb-2 flex items-center justify-between max-w-xs"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-[#1b281b] dark:text-white">
+                        Reminder: {task.title}
+                      </p>
+                      <p className="text-xs text-gray-600 dark:text-gray-400">
+                        Due: {task.reminder ? new Date(task.reminder).toLocaleString() : "N/A"}
+                      </p>
+                    </div>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => {
+                          const audio = new Audio("/sounds/alert.mp3");
+                          audio.onerror = () => {
+                            console.error(`Failed to load audio for ${task.title}: File may be missing or unsupported. Ensure 'alert.mp3' is in public/sounds/`);
+                          };
+                          audio.onloadeddata = () => {
+                            audio
+                              .play()
+                              .then(() => console.log(`Playing reminder for ${task.title}`))
+                              .catch((err) => console.error(`Failed to play audio for ${task.title}:`, err));
+                          };
+                          setPendingReminders((prev) => {
+                            const updatedSet = new Set(prev);
+                            updatedSet.delete(task.id);
+                            return updatedSet;
+                          });
+                        }}
+                        className="text-[#3f9142] hover:text-[#357937]"
+                      >
+                        Play Sound
+                      </button>
+                      <button
+                        onClick={() => {
+                          setPendingReminders((prev) => {
+                            const updatedSet = new Set(prev);
+                            updatedSet.delete(task.id);
+                            return updatedSet;
+                          });
+                        }}
+                        className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200"
+                      >
+                        Dismiss
+                      </button>
+                    </div>
+                  </div>
+                );
+              })
+            ) : (
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                No active reminders.
+              </p>
+            )}
+          </div>
         </div>
       </div>
-    </ThemeProvider>
+    </div>
   );
 }

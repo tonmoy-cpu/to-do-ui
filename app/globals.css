@@ -104,3 +104,44 @@ body {
 .task-medium { background-color: hsl(43 74% 66%); color: black; }
 .task-low { background-color: hsl(0 0% 96.1%); color: black; }
 .task-options { @apply absolute bg-white dark:bg-[#242424] shadow-lg rounded-md p-2; }
+
+/* app/globals.css */
+.task-low {
+  background-color: #e0f7fa; /* Cyan 50 - Light mode */
+  border: 1px solid #b0bec5; /* Light gray border */
+}
+
+.task-medium {
+  background-color: #fff3e0; /* Orange 50 - Light mode */
+  border: 1px solid #b0bec5;
+}
+
+.task-high {
+  background-color: #ffebee; /* Red 50 - Light mode */
+  border: 1px solid #b0bec5;
+}
+
+.task-low.dark,
+.task-medium.dark,
+.task-high.dark {
+  background-color: #b2dfdb; /* Teal 100 - Dark mode for low */
+}
+
+.task-medium.dark {
+  background-color: #ffe0b2; /* Orange 100 - Dark mode for medium */
+}
+
+.task-high.dark {
+  background-color: #ffccbc; /* Red 100 - Dark mode for high */
+}
+
+.task-low.dark,
+.task-medium.dark,
+.task-high.dark {
+  border-color: #78909c; /* Dark gray border for dark mode */
+}
+
+/* Ensure completed tasks have a distinct style */
+.line-through {
+  opacity: 0.6;
+}

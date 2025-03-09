@@ -5,8 +5,7 @@ import { addTask, fetchWeather } from "@/redux/actions";
 import { AppDispatch } from "@/redux/store";
 import { Button } from "@/components/ui/button";
 import { Task } from "@/types/task";
-
-const generateUniqueId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+import { v4 as uuidv4 } from "uuid"; // Import uuid
 
 const TaskInput = ({ onClose }: { onClose: () => void }) => {
   const [task, setTask] = useState("");
@@ -20,14 +19,15 @@ const TaskInput = ({ onClose }: { onClose: () => void }) => {
     e.preventDefault();
     if (task) {
       const newTask: Task = {
-        id: generateUniqueId(),
+        id: uuidv4(), // Use uuid for unique IDs
         title: task,
         category,
         location,
         priority,
         reminder: reminder ? new Date(reminder).toISOString() : null,
-        completed: false, // Default to not completed
+        completed: false,
       };
+      console.log("Generated ID:", newTask.id); // Debug log
       dispatch(addTask(newTask));
       if (category === "outdoor") {
         dispatch(fetchWeather(location));

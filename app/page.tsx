@@ -9,7 +9,7 @@ import TaskInput from "@/components/TaskInput";
 import TaskList from "@/components/TaskList";
 import { useSelector } from "react-redux";
 import { RootState } from "@/redux/store";
-import { ThemeProvider } from "@/components/theme-provider"; // Import ThemeProvider here
+import { ThemeProvider } from "@/components/theme-provider";
 
 export default function TaskManager() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -19,12 +19,23 @@ export default function TaskManager() {
   const [mounted, setMounted] = useState(false);
   const tasks = useSelector((state: RootState) => state.tasks);
 
-  useEffect(() => {
-    console.log("Theme changed to:", theme);
-  }, [theme]);
+  // Fallback to detect theme directly from <html> class
+  const [effectiveTheme, setEffectiveTheme] = useState(theme);
 
   useEffect(() => {
+    console.log("Theme changed to:", theme);
+    setEffectiveTheme(theme); // Update effective theme when useTheme updates
+  }, [theme]);
+
+  // Observe <html> class changes as a fallback
+  useEffect(() => {
+    const html = document.documentElement;
+    const observer = new MutationObserver(() => {
+      setEffectiveTheme(html.classList.contains("dark") ? "dark" : "light");
+    });
+    observer.observe(html, { attributes: true, attributeFilter: ["class"] });
     setMounted(true);
+    return () => observer.disconnect();
   }, []);
 
   if (!mounted) return null;
@@ -41,10 +52,11 @@ export default function TaskManager() {
   const remainingTasks = totalTasks - completedTasks;
   const progress = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
-  const textColor = theme === "dark" ? "#bdbdbd" : "#1b281b";
+  // Use effectiveTheme for color computation
+  const textColor = effectiveTheme === "dark" ? "#bdbdbd" : "#1b281b";
 
   return (
-    <ThemeProvider> {/* Wrap the entire component with ThemeProvider */}
+    <ThemeProvider>
       <div className="flex h-screen bg-[#fbfdfc] dark:bg-[#1e1e1e] text-[#1b281b] dark:text-white">
         <div className={cn("flex flex-col border-r border-[#eef6ef] dark:border-[#2c2c2c] bg-[#fbfdfc] dark:bg-[#232323] transition-all duration-300", sidebarOpen ? "w-64" : "w-0 md:w-20")}>
           <div className="flex items-center p-4 border-b border-[#eef6ef] dark:border-[#2c2c2c]">
@@ -119,7 +131,9 @@ export default function TaskManager() {
                     y="50%"
                     textAnchor="middle"
                     dy=".3em"
-                    style={{ fontWeight: "bold", color: textColor }}
+                    fill={textColor} // Use fill instead of color for SVG text
+                    className={cn("font-bold", effectiveTheme === "dark" ? "text-[#bdbdbd]" : "text-[#1b281b]")} // Tailwind fallback
+                    style={{ fontWeight: "bold" }}
                   >
                     {`${Math.round(progress)}%`}
                   </text>

@@ -1,29 +1,37 @@
 "use client";
 import React, { useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { addTask, deleteTask } from "@/redux/actions";
+import { addTask, deleteTask, fetchWeather } from "@/redux/actions";
+import { RootState, AppDispatch } from "@/redux/store";
 import TaskOptions from "@/components/TaskOptions";
+import { Task } from "@/types/task";
+import { Weather } from "@/types/weather";
 
 const TaskList = ({ activeTab }: { activeTab: string }) => {
-  const tasks = useSelector((state: any) => state.tasks);
-  const weather = useSelector((state: any) => state.weather);
-  const dispatch = useDispatch();
+  const tasks = useSelector((state: RootState) => state.tasks);
+  const weather = useSelector((state: RootState) => state.weather);
+  const dispatch = useDispatch<AppDispatch>();
 
   useEffect(() => {
-    // Only run this once on mount if tasks array is empty
     if (tasks.length === 0) {
-      const storedTasks = JSON.parse(localStorage.getItem("tasks") || "[]");
-      storedTasks.forEach((task: any) => {
-        // Dispatch only if task isn't already in state (redundant with reducer check, but extra safety)
-        if (!tasks.some((t: any) => t.id === task.id)) {
+      const storedTasks: Task[] = JSON.parse(localStorage.getItem("tasks") || "[]");
+      storedTasks.forEach((task) => {
+        if (!tasks.some((t) => t.id === task.id)) {
           dispatch(addTask(task));
         }
       });
     }
-  }, [dispatch]); // Removed tasks from dependency array to prevent re-runs
+
+    // Fetch weather for all outdoor tasks if not already fetched
+    tasks.forEach((task: Task) => {
+      if (task.category === "outdoor" && !weather[task.location]) {
+        dispatch(fetchWeather(task.location));
+      }
+    });
+  }, [dispatch, tasks, weather]);
 
   useEffect(() => {
-    tasks.forEach((task: any) => {
+    tasks.forEach((task: Task) => {
       if (task.reminder && new Date(task.reminder) <= new Date()) {
         console.log(`Reminder: ${task.title}`);
         if (!document.hidden) {
@@ -33,31 +41,42 @@ const TaskList = ({ activeTab }: { activeTab: string }) => {
     });
   }, [tasks]);
 
-  const filteredTasks = tasks.filter((task: any) => {
-    if (activeTab === "inbox") return true;
-    if (activeTab === "today") return new Date(task.reminder).toDateString() === new Date().toDateString();
-    if (activeTab === "upcoming") return new Date(task.reminder) > new Date();
+  const filteredTasks = tasks.filter((task: Task) => {
+    if (activeTab === "home" || activeTab === "inbox") return true;
+    if (activeTab === "today") return task.reminder && new Date(task.reminder).toDateString() === new Date().toDateString();
+    if (activeTab === "upcoming") return task.reminder && new Date(task.reminder) > new Date();
     if (activeTab === "important") return task.priority === "high";
     return false;
   });
 
   return (
     <ul>
-      {filteredTasks.map((task: any) => (
-        <li key={task.id} className={`flex justify-between items-center border-b p-2 task-${task.priority}`}>
-          <div>
-            <span>{task.title} ({task.category})</span>
-            {task.category === "outdoor" && weather && weather.name === task.location && (
-              <p>Weather: {weather.main.temp}°C, {weather.weather[0].description}</p>
-            )}
-            {task.reminder && <p>Due: {new Date(task.reminder).toLocaleString()}</p>}
-          </div>
-          <div className="flex items-center space-x-2">
-            <TaskOptions task={task} />
-            <button onClick={() => dispatch(deleteTask(task.id))} className="text-red-500">Delete</button>
-          </div>
-        </li>
-      ))}
+      {filteredTasks.map((task: Task) => {
+        const taskWeather: Weather | undefined = weather[task.location];
+        return (
+          <li key={task.id} className={`flex justify-between items-center border-b p-2 task-${task.priority}`}>
+            <div>
+              <span>{task.title} ({task.category})</span>
+              {task.category === "outdoor" && taskWeather && (
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  {taskWeather.error
+                    ? "Weather unavailable"
+                    : `Weather: ${taskWeather.main.temp}°C, ${taskWeather.weather[0].description}`}
+                </p>
+              )}
+              {task.reminder && (
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Due: {new Date(task.reminder).toLocaleString()}
+                </p>
+              )}
+            </div>
+            <div className="flex items-center space-x-2">
+              <TaskOptions task={task} />
+              <button onClick={() => dispatch(deleteTask(task.id))} className="text-red-500">Delete</button>
+            </div>
+          </li>
+        );
+      })}
     </ul>
   );
 };

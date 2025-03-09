@@ -1,9 +1,10 @@
 import { createAction } from "@reduxjs/toolkit";
 import weatherService from "@/services/weatherService";
+import { Task } from "@/types/task";
 
-export const addTask = createAction<any>("ADD_TASK"); // Using 'any' for now; refine type as needed
-export const deleteTask = createAction<number>("DELETE_TASK");
-export const editTask = createAction<any>("EDIT_TASK");
+export const addTask = createAction<Task>("ADD_TASK");
+export const deleteTask = createAction<string>("DELETE_TASK"); // Changed to string to match Task.id
+export const editTask = createAction<Task>("EDIT_TASK");
 export const login = createAction("LOGIN");
 export const logout = createAction("LOGOUT");
 
@@ -12,7 +13,7 @@ export const fetchWeather = (location = "London") => async (dispatch: any) => {
     const weather = await weatherService.getWeather(location);
     dispatch({ type: "SET_WEATHER", payload: weather });
   } catch (error) {
-    console.error("Failed to fetch weather:", error);
-    dispatch({ type: "SET_WEATHER", payload: null }); // Clear weather on error
+    console.error(`Failed to fetch weather for ${location}:`, error);
+    dispatch({ type: "SET_WEATHER", payload: { name: location, error: true } });
   }
 };

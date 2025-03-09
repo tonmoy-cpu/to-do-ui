@@ -2,24 +2,25 @@
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import { addTask, fetchWeather } from "@/redux/actions";
+import { AppDispatch } from "@/redux/store";
 import { Button } from "@/components/ui/button";
+import { Task } from "@/types/task";
 
-// Simple utility to generate unique IDs
 const generateUniqueId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
 const TaskInput = ({ onClose }: { onClose: () => void }) => {
   const [task, setTask] = useState("");
-  const [category, setCategory] = useState("indoor");
+  const [category, setCategory] = useState<"indoor" | "outdoor">("indoor");
   const [location, setLocation] = useState("London");
-  const [priority, setPriority] = useState("low");
+  const [priority, setPriority] = useState<"low" | "medium" | "high">("low");
   const [reminder, setReminder] = useState("");
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
 
   const handleAddTask = (e: React.FormEvent) => {
     e.preventDefault();
     if (task) {
-      const newTask = {
-        id: generateUniqueId(), // More robust ID generation
+      const newTask: Task = {
+        id: generateUniqueId(),
         title: task,
         category,
         location,
@@ -27,7 +28,9 @@ const TaskInput = ({ onClose }: { onClose: () => void }) => {
         reminder: reminder ? new Date(reminder).toISOString() : null,
       };
       dispatch(addTask(newTask));
-      if (category === "outdoor") dispatch(fetchWeather(location));
+      if (category === "outdoor") {
+        dispatch(fetchWeather(location));
+      }
       setTask("");
       onClose();
     }
@@ -42,7 +45,7 @@ const TaskInput = ({ onClose }: { onClose: () => void }) => {
         placeholder="Add a new task"
         className="border p-2"
       />
-      <select value={category} onChange={(e) => setCategory(e.target.value)} className="border p-2">
+      <select value={category} onChange={(e) => setCategory(e.target.value as "indoor" | "outdoor")} className="border p-2">
         <option value="indoor">Indoor</option>
         <option value="outdoor">Outdoor</option>
       </select>
@@ -55,7 +58,7 @@ const TaskInput = ({ onClose }: { onClose: () => void }) => {
           className="border p-2"
         />
       )}
-      <select value={priority} onChange={(e) => setPriority(e.target.value)} className="border p-2">
+      <select value={priority} onChange={(e) => setPriority(e.target.value as "low" | "medium" | "high")} className="border p-2">
         <option value="low">Low</option>
         <option value="medium">Medium</option>
         <option value="high">High</option>

@@ -1,16 +1,23 @@
 import { createReducer } from "@reduxjs/toolkit";
 import { addTask, deleteTask, editTask, login, logout } from "./actions";
+import { Task } from "@/types/task";
+import { Weather } from "@/types/weather";
 
-const initialState = {
+interface AppState {
+  tasks: Task[];
+  weather: { [location: string]: Weather };
+  auth: { isAuthenticated: boolean };
+}
+
+const initialState: AppState = {
   tasks: [],
-  weather: null,
+  weather: {},
   auth: { isAuthenticated: false },
 };
 
 const reducer = createReducer(initialState, (builder) => {
   builder
     .addCase(addTask, (state, action) => {
-      // Prevent duplicates by checking if the task ID already exists
       if (!state.tasks.some((task) => task.id === action.payload.id)) {
         state.tasks.push(action.payload);
       }
@@ -34,7 +41,8 @@ const reducer = createReducer(initialState, (builder) => {
       state.auth.isAuthenticated = false;
     })
     .addCase("SET_WEATHER", (state, action) => {
-      state.weather = action.payload;
+      const weather = action.payload;
+      state.weather[weather.name] = weather;
     });
 });
 

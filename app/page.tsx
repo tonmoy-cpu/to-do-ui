@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, Clock, Home, Inbox, Menu, Plus, Search, Settings, Star, User } from "lucide-react";
@@ -7,25 +7,17 @@ import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
 import TaskInput from "@/components/TaskInput";
 import TaskList from "@/components/TaskList";
-import { useDispatch, useSelector } from "react-redux";
-import { fetchWeather } from "@/redux/actions";
-import { RootState, AppDispatch } from "@/redux/store";
+import { useSelector } from "react-redux";
+import { RootState } from "@/redux/store";
 
 export default function TaskManager() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [activeTab, setActiveTab] = useState("inbox");
   const [showTaskInput, setShowTaskInput] = useState(false);
   const { theme, setTheme } = useTheme();
-  const dispatch = useDispatch<AppDispatch>();
   const weather = useSelector((state: RootState) => state.weather);
 
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
-
-  useEffect(() => {
-    if (activeTab === "today" && !weather) {
-      dispatch(fetchWeather("London")); // Default location
-    }
-  }, [activeTab, dispatch, weather]);
 
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
@@ -34,7 +26,6 @@ export default function TaskManager() {
 
   return (
     <div className="flex h-screen bg-[#fbfdfc] dark:bg-[#1e1e1e] text-[#1b281b] dark:text-white">
-      {/* Sidebar */}
       <div className={cn("flex flex-col border-r border-[#eef6ef] dark:border-[#2c2c2c] bg-[#fbfdfc] dark:bg-[#232323] transition-all duration-300", sidebarOpen ? "w-64" : "w-0 md:w-20")}>
         <div className="flex items-center p-4 border-b border-[#eef6ef] dark:border-[#2c2c2c]">
           {sidebarOpen ? (
@@ -83,7 +74,6 @@ export default function TaskManager() {
         </div>
       </div>
 
-      {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="flex items-center justify-between h-16 px-4 border-b border-[#eef6ef] dark:border-[#2c2c2c]">
           <div className="flex items-center">
@@ -107,14 +97,6 @@ export default function TaskManager() {
               <Plus size={16} className="mr-2" /> Add New
             </Button>
           </div>
-
-          {weather && activeTab === "today" && (
-            <div className="mb-4 p-4 bg-white dark:bg-[#242424] rounded-lg shadow">
-              <h3 className="text-lg font-medium">Current Weather</h3>
-              <p>{weather.name}: {weather.main.temp}°C</p>
-              <p>{weather.weather[0].description}</p>
-            </div>
-          )}
 
           {showTaskInput && <TaskInput onClose={() => setShowTaskInput(false)} />}
           <TaskList activeTab={activeTab} />

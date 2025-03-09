@@ -27,7 +27,7 @@ const TaskInput: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         priority: priority as "low" | "medium" | "high",
         location: category === "outdoor" ? location : "",
       };
-      console.log("Adding new task:", newTask); // Debug log
+      console.log("Adding new task:", newTask);
       dispatch(addTask(newTask));
       setTitle("");
       setReminder("");
@@ -57,10 +57,14 @@ const TaskInput: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          className="w-full p-2 border rounded text-[#1b281b] dark:text-white bg-transparent"
+          className="w-full p-2 border rounded text-[#1b281b] dark:text-white bg-transparent dark:bg-[#2c2c2c] appearance-none"
         >
-          <option value="indoor">Indoor</option>
-          <option value="outdoor">Outdoor</option>
+          <option value="indoor" className="bg-white dark:bg-[#2c2c2c] text-[#1b281b] dark:text-white">
+            Indoor
+          </option>
+          <option value="outdoor" className="bg-white dark:bg-[#2c2c2c] text-[#1b281b] dark:text-white">
+            Outdoor
+          </option>
         </select>
         {category === "outdoor" && (
           <input

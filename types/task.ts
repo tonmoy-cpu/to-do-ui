@@ -6,4 +6,5 @@ export interface Task {
     location: string;
     priority: "low" | "medium" | "high";
     reminder: string | null;
+    completed: boolean; // New field to track completion
   }

@@ -6,15 +6,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true); // Ensures theme is applied only after hydration
+    setMounted(true);
   }, []);
 
   if (!mounted) {
-    return <>{children}</>; // Avoids mismatched SSR content
+    return <>{children}</>;
   }
 
   return (
-    <NextThemesProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+    <NextThemesProvider attribute="class" defaultTheme="light" enableSystem={false} disableTransitionOnChange>
       {children}
     </NextThemesProvider>
   );

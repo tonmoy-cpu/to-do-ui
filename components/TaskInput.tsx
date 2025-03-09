@@ -26,6 +26,7 @@ const TaskInput = ({ onClose }: { onClose: () => void }) => {
         location,
         priority,
         reminder: reminder ? new Date(reminder).toISOString() : null,
+        completed: false, // Default to not completed
       };
       dispatch(addTask(newTask));
       if (category === "outdoor") {

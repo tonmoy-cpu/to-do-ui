@@ -19,7 +19,7 @@ const reducer = createReducer(initialState, (builder) => {
   builder
     .addCase(addTask, (state, action) => {
       if (!state.tasks.some((task) => task.id === action.payload.id)) {
-        state.tasks.push(action.payload);
+        state.tasks.push({ ...action.payload, completed: false }); // Default to not completed
       }
       localStorage.setItem("tasks", JSON.stringify(state.tasks));
     })
@@ -43,6 +43,13 @@ const reducer = createReducer(initialState, (builder) => {
     .addCase("SET_WEATHER", (state, action) => {
       const weather = action.payload;
       state.weather[weather.name] = weather;
+    })
+    .addCase("TOGGLE_TASK_COMPLETION", (state, action) => {
+      const task = state.tasks.find((t) => t.id === action.payload);
+      if (task) {
+        task.completed = !task.completed;
+        localStorage.setItem("tasks", JSON.stringify(state.tasks));
+      }
     });
 });
 
